@@ -66,19 +66,19 @@ async function loadProjects() {
 async function createProject() {
   const nm = newProject.value.trim()
   if (!nm) return
+  error.value = ''
   const sb = await supabase()
-  const { data, error: e } = await sb
+  const { error: e } = await sb
     .from('projects')
     .insert({ name: nm, owner_id: session.value.user.id })
-    .select()
-    .single()
   if (e) {
     error.value = e.message
     return
   }
   newProject.value = ''
   await loadProjects()
-  select(data.id)
+  const created = projects.value.find((p) => p.name === nm)
+  if (created) await select(created.id)
 }
 
 async function removeProject() {
