@@ -129,14 +129,35 @@ async function save() {
     busy.value = false
   }
 }
+
+// evita perder o que foi digitado
+const dirty = computed(
+  () =>
+    !!name.value.trim() ||
+    !!service.value.trim() ||
+    !!url.value.trim() ||
+    !!username.value.trim() ||
+    fields.value.some((f) => f.label.trim() || f.value.trim())
+)
+
+function tryClose() {
+  if (dirty.value && !confirm('Sair sem salvar? O que você digitou será perdido.')) return
+  emit('close')
+}
+
+function onKey(e: KeyboardEvent) {
+  if (e.key === 'Escape') tryClose()
+}
+onMounted(() => window.addEventListener('keydown', onKey))
+onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div class="backdrop" @click.self="emit('close')">
+  <div class="backdrop">
     <div class="sheet panel" role="dialog" aria-modal="true">
       <header>
         <h2>{{ credentialId ? 'Editar credencial' : 'Nova credencial' }}</h2>
-        <button class="btn-quiet" @click="emit('close')" aria-label="Fechar">Fechar</button>
+        <button class="btn-quiet" @click="tryClose" aria-label="Fechar">Fechar</button>
       </header>
 
       <div class="body">
@@ -192,7 +213,7 @@ async function save() {
       </div>
 
       <footer>
-        <button class="btn-ghost" @click="emit('close')">Cancelar</button>
+        <button class="btn-ghost" @click="tryClose">Cancelar</button>
         <button class="btn" :disabled="busy || loading" @click="save">
           {{ busy ? 'Salvando…' : 'Salvar credencial' }}
         </button>
